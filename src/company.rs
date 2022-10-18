@@ -1,14 +1,45 @@
 use std::{collections::HashMap, io};
 
-use strum::IntoEnumIterator;
-use strum_macros::EnumIter;
+use itertools::Itertools;
+use strum::{EnumCount, IntoEnumIterator};
+use strum_macros::{EnumCount as EnumCountMacro, EnumIter};
 
-#[derive(EnumIter)]
+// https://github.com/rust-lang/rust/issues/22756
+// Why PartialEq, Eq and Hash traits are necessary to use enum as a key on the HashMap
+#[derive(Debug, EnumCountMacro, EnumIter, PartialEq, Eq, Hash, Clone, Copy, PartialOrd, Ord)]
 pub enum Department {
     Engineering,
     Sales,
     HumanResources,
     Financial,
+}
+
+pub struct DepartmentData {
+    id: u16,
+    description: String,
+}
+
+impl Department {
+    fn data(&self) -> DepartmentData {
+        match self {
+            Self::Engineering => DepartmentData {
+                id: 1,
+                description: "Enginnering".to_string(),
+            },
+            Self::Sales => DepartmentData {
+                id: 2,
+                description: "Sales".to_string(),
+            },
+            Self::Financial => DepartmentData {
+                id: 3,
+                description: "Financial".to_string(),
+            },
+            Self::HumanResources => DepartmentData {
+                id: 4,
+                description: "Human Resources".to_string(),
+            },
+        }
+    }
 }
 
 pub struct Company {
@@ -18,42 +49,90 @@ pub struct Company {
 
 impl Company {
     pub fn new() -> Company {
-        let employees: HashMap<String, Department> = HashMap::new();
-        let department: HashMap<Department, Vec<String>> = HashMap::new();
+        let employees_hash: HashMap<String, Department> = HashMap::new();
+        let mut department_hash: HashMap<Department, Vec<String>> = HashMap::new();
+
+        for department in Department::iter().sorted() {
+            department_hash.insert(department, Vec::new());
+        }
 
         Company {
-            employees,
-            department,
+            employees: employees_hash,
+            department: department_hash,
         }
     }
 
-    pub fn add_employee(&self) {
-        println!("add_employee")
+    pub fn add_employee(&mut self) {
+        let mut employee_name = String::new();
 
-        // let mut employee_name = String::new();
+        println!("Employee name: ");
 
-        // print!("Employee name: ");
+        io::stdin()
+            .read_line(&mut employee_name)
+            .expect("Some erro!");
 
-        // io::stdin()
-        //     .read_line(&mut employee_name)
-        //     .expect("Some erro!");
+        println!("Employee department: ");
 
-        // print!("Employee department: ");
+        let department = self.select_department();
 
-        // for department in Department::iter() {
-        //     // println!("{}")
-        // }
+        self.employees
+            .insert(employee_name.clone(), department.clone());
 
-        // io::stdin()
-        //     .read_line(&mut employee_name)
-        //     .expect("Some erro!");
+        let department_hash = self.department.get_mut(&department);
+
+        match department_hash {
+            Some(hash) => hash.push(employee_name),
+            None => panic!("The departament hashmap was not initialized!"),
+        }
+    }
+
+    fn select_department(&self) -> Department {
+        let department_count_options = Department::COUNT as u16;
+
+        loop {
+            for department in Department::iter() {
+                let department_data = department.data();
+
+                println!("{} - {}", department_data.id, department_data.description)
+            }
+
+            let mut choice = String::new();
+
+            io::stdin().read_line(&mut choice).expect("Some error!");
+
+            let selected_choice = choice.trim().parse::<u16>();
+
+            match selected_choice {
+                Ok(num) => match num > department_count_options || num < 1 {
+                    true => println!("Please, select a valid option!"),
+                    false => {
+                        for option in Department::iter() {
+                            let option_data = option.data();
+
+                            if num == option_data.id {
+                                return option;
+                            }
+                        }
+                    }
+                },
+                Err(_) => {
+                    println!("Please, select a number");
+                }
+            }
+        }
     }
 
     pub fn all_in_department(&self) {
-        println!("all_in_department")
+        for (k, v) in &self.department {
+            println!("{} - {:?}", k.data().description, v);
+        }
     }
 
     pub fn all_in_company(&self) {
-        println!("all_in_company")
+        for key in self.employees.keys().sorted() {
+            let department = &self.employees[key].data().description;
+
+            println!("{} - {}", key, department);
+        }
     }
 }

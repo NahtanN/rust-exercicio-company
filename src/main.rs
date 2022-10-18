@@ -13,7 +13,7 @@ use std::io;
 use strum::IntoEnumIterator;
 
 fn main() {
-    let company = Company::new();
+    let mut company = Company::new();
 
     loop {
         let option = company_options();
