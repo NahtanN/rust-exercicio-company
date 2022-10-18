@@ -4,99 +4,13 @@
 // of all people in a department or all people in the company by department,
 // sorted alphabetically.
 
-use std::collections::HashMap;
+mod company;
+mod company_options;
+
+use crate::company::Company;
+use crate::company_options::CompanyOptions;
 use std::io;
-use strum::{EnumCount, IntoEnumIterator};
-use strum_macros::{EnumCount as EnumCountMacro, EnumIter};
-
-#[derive(Debug, EnumCountMacro, EnumIter)]
-enum CompanyOptions {
-    AddEmployee,
-    AllInDepartment,
-    AllInCompany,
-    Close,
-}
-
-struct Choice {
-    id: u16,
-    description: String,
-}
-
-#[derive(EnumIter)]
-enum Department {
-    Engineering,
-    Sales,
-    HumanResources,
-    Financial,
-}
-
-struct Company {
-    employees: HashMap<String, Department>,
-    department: HashMap<Department, Vec<String>>,
-}
-
-impl Company {
-    fn new() -> Company {
-        let employees: HashMap<String, Department> = HashMap::new();
-        let department: HashMap<Department, Vec<String>> = HashMap::new();
-
-        Company {
-            employees,
-            department,
-        }
-    }
-
-    fn add_employee(&self) {
-        let mut employee_name = String::new();
-
-        print!("Employee name: ");
-
-        io::stdin()
-            .read_line(&mut employee_name)
-            .expect("Some erro!");
-
-        print!("Employee department: ");
-
-        for department in Department::iter() {
-            // println!("{}")
-        }
-
-        io::stdin()
-            .read_line(&mut employee_name)
-            .expect("Some erro!");
-    }
-
-    fn all_in_department(&self) {}
-
-    fn all_in_company(&self) {}
-}
-
-impl CompanyOptions {
-    fn count_options() -> u16 {
-        CompanyOptions::COUNT as u16
-    }
-
-    fn data(&self) -> Choice {
-        match self {
-            Self::AddEmployee => Choice {
-                id: 1,
-                description: "Add employee".to_string(),
-            },
-            Self::AllInDepartment => Choice {
-                id: 2,
-                description: "Get all people in a department".to_string(),
-            },
-            Self::AllInCompany => Choice {
-                id: 3,
-                description: "Get all people in the company".to_string(),
-            },
-            Self::Close => Choice {
-                id: 4,
-                description: "Close".to_string(),
-            },
-        }
-    }
-}
+use strum::IntoEnumIterator;
 
 fn main() {
     let company = Company::new();
